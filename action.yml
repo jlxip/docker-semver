@@ -1,0 +1,32 @@
+name: "Docker SemVer 2.0.0"
+description: "Build and push Docker image with Semantic Versioning 2.0.0 tags"
+author: jlxip
+
+inputs:
+  context:
+    description: "Build's context is the set of files located in the specified PATH or URL"
+    required: false
+    default: .
+  image:
+    description: "Image name in the hub. For instance: user/yourimage"
+    required: true
+  version:
+    description: "Version number following Semantic Versioning 2.0.0"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Switch action path
+      run: echo "${{ github.action_path }}" >> $GITHUB_PATH
+      shell: bash
+    - name: Calculate versions
+      run: echo "VERSIONS=$(versions.sh ${{ inputs.version }} ${{ inputs.image }})" >> $GITHUB_OUTPUT
+      id: versions
+      shell: bash
+    - name: Call build and push
+      uses: docker/build-push-action@v3
+      with:
+        context: ${{ inputs.context }}
+        push: true
+        tags: ${{ steps.versions.outputs.VERSIONS }}
